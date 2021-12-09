@@ -119,4 +119,31 @@ class Prop_RK : public Propagator<Coord> {
     Coord state;
 };
 
+template<typename Coord>
+class Prop_Numerov : public Propagator<Coord> {
+    public:
+    Prop_Numerov(NumerovIVP<Coord>& problem_, double dx_) : Propagator<Coord>(problem_, dx_) {
+        NumerovIVP<Coord>& problem = static_cast<NumerovIVP<Coord>&>(this->problem);
+        state = problem.y0;
+        yim1 = problem.ym1;
+    }
+    Coord step()
+    {
+        NumerovIVP<Coord>& problem = static_cast<NumerovIVP<Coord>&>(this->problem);
+        NumerovSystem<Coord>& s = static_cast<NumerovSystem<Coord>&>(this->problem.s);
+        Coord factor = 1 / (12 - (s.E - s.c(this->t + this->timestep)) * std::pow(this->timestep, 2));
+        Coord tmp = (10 * std::pow(this->timestep, 2) * (s.E - s.c(this->t)) + 24) * this->yi +
+                ((s.E - s.c(this->t - this->timestep)) * std::pow(this->timestep, 2) - 12) * yim1;
+        state = factor * tmp;
+        this->yim1 = this->yi;
+        this->yi = state;
+        this->t += this->timestep;
+        return state;
+    }
+    private:
+    Coord state;
+    Coord yim1;
+};
+
+
 #endif

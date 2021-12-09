@@ -13,6 +13,29 @@ class System {
     virtual Coord operator()(Coord y, double t) = 0;
 };
 
+template<typename Coord>
+class NumerovSystem : public System<Coord> {
+    public:
+    NumerovSystem(double E_, std::function<Coord(Coord)> c_) : E(E_), c(c_) { };
+    double E;
+    std::function<Coord(Coord)> c;
+    virtual Coord operator()(Coord x, double t)
+    {
+        return c(x);
+    }
+    virtual Coord operator()(Coord x)
+    {
+        return c(x);
+    }
+};
+
+template<typename Coord>
+class SchrodingerSystem : public NumerovSystem<Coord> {
+    public:
+    SchrodingerSystem(double E_, std::function<Coord(Coord)> c_, Coord a_ = -0.5) : NumerovSystem<Coord>(
+                E_ / a_,
+                [a_, c_](Coord x) -> Coord { return c_(x) / a_;}) { }
+};
 
 template<typename Coord>
 class IVP {
@@ -27,6 +50,17 @@ class IVP {
     double t;
 };
 
+template<typename Coord>
+class NumerovIVP : public IVP<Coord> {
+    public:
+    NumerovIVP(NumerovSystem<Coord>& s_, Coord y0_, Coord ym1_) : IVP<Coord>(s_, y0_, 0), ym1(ym1_) { }
+    NumerovIVP(NumerovSystem<Coord>& s_, Coord y0_, Coord ym1_, double t_) : IVP<Coord>(s_, y0_, t_), ym1(ym1_) { }
+    NumerovIVP(NumerovSystem<Coord>&& s_, Coord y0_, Coord ym1_) = delete;
+    NumerovIVP(NumerovSystem<Coord>&& s_, Coord y0_, Coord ym1_, double t_) = delete;
+    Coord y0;
+    Coord ym1;
+    double t;
+};
 
 typedef struct coord_t {
     double x, v;
