@@ -1,5 +1,6 @@
 #include <functional>
 #include <assert.h>
+#include <stdexcept>
 #include "utilities.h"
 
 double integrate_naif(double a, double b, int n, std::function<double(double)> fun)
@@ -56,5 +57,16 @@ double integrate_simpson(double a, double b, int n, std::function<double(double)
         integral += fun(domain[i]) * h / 3 * (i % 2 ? 4 : 2);
     }
     free(domain);
+    return integral;
+}
+
+double integrate_simpson(double* fun, double h, int n)
+{
+    if (n % 2 == 0)
+        throw std::runtime_error("value n is not an odd integer");
+    double integral = (fun[0] + fun[n-1]) * h / 3;
+    for (int i = 1; i < n-1; ++i) {
+        integral += fun[i] * h / 3 * (i % 2 ? 4 : 2);
+    }
     return integral;
 }
